@@ -1,3 +1,15 @@
++ socket地址
+  + 通用socket地址(16字节)
+    + ```C++ 
+        struct sockaddr {
+            __uint8_t sa_len;
+            sa_family_t sa_family;
+            char sa_data[14];
+        }    
+        
+        ```
+
+
 # UML类图
 ```mermaid
 graph LR
@@ -62,9 +74,32 @@ graph TB
 
 subgraph S[void default_socket_options&#40socket_t sock&#41]
     S0[int yes=1]-->S1
-    S1[setsockopt&#40sock, 1, 15, reinterpret_cast&#60const void *&#62&#40&yes&#41, sizeof&#40&yes&#41&#41]
+    S1[setsockopt&#40sock, 1, 15, <br>reinterpret_cast&#60const void *&#62&#40&yes&#41, sizeof&#40&yes&#41&#41]
     S1-.->S11[用于设置套接字选项的函数<br>允许在创建的套接字上设置一些参数,用于控制套接字的行为和属性<br>1:SOL_SOCKET,表示设置的是套接字级别的选项<br>15:SO_REUSEPORT,允许地址重用,常用于服务端套接字,防止地址已经被使用的错误]
 end
+```
+
+```mermaid
+graph TB
+subgraph K[lambda函数指针:bool &#40socket_t sock, struct addrinfo &ai&#41]
+    K1[bind函数,把socket套接字绑定到指定的ip地址和端口上]
+    K1-->K2[listen&#40sock, 5&#41]
+end
+```
+
+```mermaid
+graph TB
+
+A[BindOrConnect]-.->B[推断类型的函数指针]
+subgraph L[create_socket&#40const std::string &host, const std::string &ip, int port,<br>int address_family, int socket_flags, bool tcp_nodelay,<br>SocketOptions socket_options,BindOrConnect bind_or_connect&#41]
+
+end
+
+```
+
+```mermaid
+graph TB
+
 O(开始)-->A
 A[Server srv]-.->A1[给new_task_queue分配一个function对象,预创建线程池]
 A-->B[srv.Get&#40&#41]
@@ -82,7 +117,12 @@ subgraph C1[listen process]
         C112[bind_internal&#40&#34localhost&#34, 8080, 0&#41&#41]
         C112-.->C1111
         subgraph C1111[bind_internal process]
-            C1112[create_server_socket&#40&#34localhost&#34, 8080, 0, &#41]
+            C1112[create_server_socket&#40&#34localhost&#34, <br>8080, 0, default_socket_options&#41]
+            C1112-.->C1113
+            subgraph C1113[create_server_socket process]
+                C11131[create_socket&#40&#34localhost&#34,std::string&#40&#41,8080, AF_UNSPEC, 0, <br>false, std::move&#40default_socket_options&#41, lambda函数指针&#41]
+
+            end
         end
     end
     C11-->C12[Server::listen_internal&#40&#41]

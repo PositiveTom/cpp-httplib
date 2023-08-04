@@ -2816,7 +2816,7 @@ socket_t create_socket(const std::string &host, const std::string &ip, int port,
   struct addrinfo hints;
   struct addrinfo *result;
 
-  memset(&hints, 0, sizeof(struct addrinfo));
+  memset(&hints, 0, sizeof(struct addrinfo));/*在一段内存中填充某个值*/
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_protocol = 0;
 
